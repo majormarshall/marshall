@@ -7,7 +7,7 @@ import { HandTracker, type TrackerStatus } from "@/lib/handTracker";
 type CameraState = "off" | "starting" | "on" | "error";
 type Panel = "none" | "chat" | "files" | "apps" | "camera" | "qr" | "system";
 
-const API = "http://localhost:8000";
+const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
 const MODE_LABEL: Record<TrackerStatus["mode"], string> = {
   idle: "STANDBY",
@@ -51,21 +51,10 @@ export default function MarshallOrb() {
   const [qrUrl, setQrUrl] = useState<string | null>(null);
   const [tunnelUrl, setTunnelUrl] = useState<string | null>(null);
 
-  // App launcher
-  const quickApps = [
-    { name: "Antigravity", icon: "??" },
-    { name: "Chrome", icon: "??" },
-    { name: "VS Code", icon: "??" },
-    { name: "Explorer", icon: "??" },
-    { name: "Notepad", icon: "??" },
-    { name: "Settings", icon: "??" },
-    { name: "Calculator", icon: "??" },
-    { name: "Task Manager", icon: "??" },
-    { name: "Spotify", icon: "??" },
-    { name: "Discord", icon: "??" },
-    { name: "PowerShell", icon: "???" },
-    { name: "Paint", icon: "??" },
-  ];
+  // App launcher — dynamic, loaded from backend
+  const [installedApps, setInstalledApps] = useState<{ name: string; icon: string; path: string }[]>([]);
+  const [appSearch, setAppSearch] = useState("");
+  const [voiceAction, setVoiceAction] = useState<string | null>(null);
 
   // -- Orb scene ------------------------------
   useEffect(() => {
@@ -121,6 +110,16 @@ export default function MarshallOrb() {
   // -- Fetch files --------------------------
   useEffect(() => {
     if (activePanel === "files") fetchFiles(filePath);
+  }, [activePanel]);
+
+  // -- Load installed apps -------------------
+  useEffect(() => {
+    if (activePanel === "apps" && installedApps.length === 0) {
+      fetch(`${API}/api/system/installed-apps`)
+        .then((r) => r.json())
+        .then((d) => setInstalledApps(d.apps || []))
+        .catch(() => null);
+    }
   }, [activePanel]);
 
   // -- Fetch tunnel/QR --------------------------
@@ -247,6 +246,7 @@ export default function MarshallOrb() {
             setMessages((m) => [...m, { role: "marshall", text: data.reply }]);
             speakText(data.reply);
           }
+          if (data.action) { setVoiceAction(data.action); setTimeout(() => setVoiceAction(null), 3000); }
           if (data.error && !data.reply) setMessages((m) => [...m, { role: "marshall", text: "Voice error: " + data.error }]);
         } catch {
           setMessages((m) => [...m, { role: "marshall", text: "Voice failed — backend offline?" }]);
@@ -413,15 +413,46 @@ export default function MarshallOrb() {
             {/* APPS */}
             {activePanel === "apps" && (
               <div className="panel-apps">
-                <div className="panel-title">?? APP LAUNCHER</div>
-                <div className="app-grid">
-                  {quickApps.map((app) => (
-                    <button key={app.name} className="app-btn" onClick={() => openApp(app.name)}>
-                      <span className="app-icon">{app.icon}</span>
-                      <span className="app-name">{app.name}</span>
-                    </button>
-                  ))}
-                </div>
+                <div className="panel-title">🚀 ALL APPS — {installedApps.length > 0 ? `${installedApps.length} INSTALLED` : "LOADING..."}</div>
+                <input
+                  className="chat-input app-search"
+                  placeholder="Search all apps..."
+                  value={appSearch}
+                  onChange={(e) => setAppSearch(e.target.value)}
+                  autoFocus
+                />
+                {installedApps.length === 0 ? (
+                  <div className="panel-loading">Scanning installed apps...</div>
+                ) : (
+                  <div className="app-grid">
+                    {(appSearch
+                      ? installedApps.filter((a) => a.name.toLowerCase().includes(appSearch.toLowerCase()))
+                      : installedApps
+                    ).map((app) => (
+                      <button
+                        key={app.path}
+                        className="app-btn"
+                        title={app.name}
+                        onClick={() =>
+                          fetch(`${API}/api/system/open`, {
+                            method: "POST",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({ app: app.name }),
+                          }).catch(() =>
+                            fetch(`${API}/api/files/open`, {
+                              method: "POST",
+                              headers: { "Content-Type": "application/json" },
+                              body: JSON.stringify({ path: app.path }),
+                            })
+                          )
+                        }
+                      >
+                        <span className="app-icon">{app.icon}</span>
+                        <span className="app-name">{app.name}</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
             )}
 
@@ -488,4 +519,5 @@ export default function MarshallOrb() {
       </div>
     </>
   );
-}
+}
+
