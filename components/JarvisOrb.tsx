@@ -326,8 +326,21 @@ export default function MarshallOrb() {
           </button>
         ))}
         <button className="dock-btn dock-lock" onClick={lockPC} title="Lock PC">
-          <span className="dock-icon">??</span>
+          <span className="dock-icon">🔒</span>
           <span className="dock-label">Lock</span>
+        </button>
+        <button
+          className="dock-btn dock-unlock"
+          title="Unlock PC (types your password)"
+          onClick={() =>
+            fetch(`${API}/api/system/unlock`, { method: "POST" })
+              .then((r) => r.json())
+              .then((d) => setMessages((m) => [...m, { role: "marshall", text: "🔓 " + (d.message || "Unlock sequence sent.") }]))
+              .catch(() => setMessages((m) => [...m, { role: "marshall", text: "Unlock failed — backend offline?" }]))
+          }
+        >
+          <span className="dock-icon">🔓</span>
+          <span className="dock-label">Unlock</span>
         </button>
       </div>
 

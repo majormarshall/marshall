@@ -539,3 +539,14 @@ body {
 @media (max-width: 600px) {
   .panel-apps .app-grid { grid-template-columns: repeat(3, 1fr); }
 }
+
+/* Unlock button */
+.dock-unlock {
+  border-color: rgba(60, 255, 120, 0.4);
+  color: #44ff88;
+}
+.dock-unlock:hover {
+  border-color: #44ff88;
+  background: rgba(0, 60, 20, 0.8);
+  box-shadow: 0 0 10px rgba(60, 255, 120, 0.2);
+}
