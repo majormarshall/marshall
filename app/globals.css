@@ -478,3 +478,14 @@ body {
   .app-grid { grid-template-columns: repeat(3, 1fr); }
   .sys-grid { grid-template-columns: 1fr; }
 }
+
+/* Mic recording pulse */
+.mic-recording {
+  border-color: #ff4444 !important;
+  color: #ff4444 !important;
+  animation: mic-pulse 0.8s ease-in-out infinite;
+}
+@keyframes mic-pulse {
+  0%,100% { box-shadow: 0 0 6px rgba(255,60,60,0.4); }
+  50% { box-shadow: 0 0 18px rgba(255,60,60,0.9); }
+}

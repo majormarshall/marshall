@@ -34,6 +34,9 @@ export default function MarshallOrb() {
   ]);
   const [chatInput, setChatInput] = useState("");
   const [chatLoading, setChatLoading] = useState(false);
+  const [recording, setRecording] = useState(false);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const audioChunksRef = useRef<Blob[]>([]);
   const chatEndRef = useRef<HTMLDivElement>(null);
 
   // System state
@@ -219,6 +222,65 @@ export default function MarshallOrb() {
     }
   };
 
+  const sendVoice = async () => {
+    if (recording) {
+      mediaRecorderRef.current?.stop();
+      return;
+    }
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mr = new MediaRecorder(stream, { mimeType: "audio/webm" });
+      audioChunksRef.current = [];
+      mr.ondataavailable = (e) => { if (e.data.size > 0) audioChunksRef.current.push(e.data); };
+      mr.onstop = async () => {
+        stream.getTracks().forEach((t) => t.stop());
+        setRecording(false);
+        setChatLoading(true);
+        const blob = new Blob(audioChunksRef.current, { type: "audio/webm" });
+        const form = new FormData();
+        form.append("file", blob, "voice.webm");
+        try {
+          const res = await fetch(`${API}/api/voice/transcribe`, { method: "POST", body: form });
+          const data = await res.json();
+          if (data.transcript) setMessages((m) => [...m, { role: "user", text: "🎤 " + data.transcript }]);
+          if (data.reply) {
+            setMessages((m) => [...m, { role: "marshall", text: data.reply }]);
+            speakText(data.reply);
+          }
+          if (data.error && !data.reply) setMessages((m) => [...m, { role: "marshall", text: "Voice error: " + data.error }]);
+        } catch {
+          setMessages((m) => [...m, { role: "marshall", text: "Voice failed — backend offline?" }]);
+        }
+        setChatLoading(false);
+      };
+      mr.start();
+      mediaRecorderRef.current = mr;
+      setRecording(true);
+    } catch {
+      setMessages((m) => [...m, { role: "marshall", text: "Microphone access denied." }]);
+    }
+  };
+
+  const speakText = (text: string) => {
+    if (!window.speechSynthesis) return;
+    window.speechSynthesis.cancel();
+    const utt = new SpeechSynthesisUtterance(text);
+    utt.rate = 0.92;
+    utt.pitch = 0.8;
+    utt.volume = 1;
+    // Load voices and pick a deep male voice
+    const trySpeak = () => {
+      const voices = window.speechSynthesis.getVoices();
+      const deep = voices.find((v) =>
+        /google uk english male|microsoft david|daniel|google us english/i.test(v.name)
+      );
+      if (deep) utt.voice = deep;
+      window.speechSynthesis.speak(utt);
+    };
+    if (window.speechSynthesis.getVoices().length > 0) trySpeak();
+    else window.speechSynthesis.addEventListener("voiceschanged", trySpeak, { once: true });
+  };
+
   const openApp = (appName: string) => {
     fetch(`${API}/api/system/open`, {
       method: "POST",
@@ -298,7 +360,14 @@ export default function MarshallOrb() {
                     placeholder="Ask MARSHALL anything..."
                     autoFocus
                   />
-                  <button className="hud-btn" onClick={sendChat} disabled={chatLoading}>SEND</button>
+                  <button className="hud-btn" onClick={sendChat} disabled={chatLoading || recording}>SEND</button>
+                  <button
+                    className={`hud-btn${recording ? " mic-recording" : ""}`}
+                    onClick={sendVoice}
+                    title={recording ? "Click to stop recording" : "Click to speak to MARSHALL"}
+                  >
+                    {recording ? "🔴 STOP" : "🎤 MIC"}
+                  </button>
                 </div>
               </div>
             )}
