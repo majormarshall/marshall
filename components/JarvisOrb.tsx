@@ -450,14 +450,8 @@ export default function MarshallOrb() {
                           fetch(`${API}/api/system/open`, {
                             method: "POST",
                             headers: { "Content-Type": "application/json" },
-                            body: JSON.stringify({ app: app.name }),
-                          }).catch(() =>
-                            fetch(`${API}/api/files/open`, {
-                              method: "POST",
-                              headers: { "Content-Type": "application/json" },
-                              body: JSON.stringify({ path: app.path }),
-                            })
-                          )
+                            body: JSON.stringify({ app: app.name, lnk: app.path }),
+                          })
                         }
                       >
                         <span className="app-icon">{app.icon}</span>
@@ -489,7 +483,16 @@ export default function MarshallOrb() {
                   <>
                     <p className="qr-url">{tunnelUrl}</p>
                     <img src={qrUrl || ""} className="qr-img" alt="QR Code" />
-                    <p className="qr-hint">Scan with your phone to control MARSHALL remotely from anywhere.</p>
+                    <p className="qr-hint">Scan to control MARSHALL remotely.</p>
+                    <a
+                      className="hud-btn"
+                      href={`${tunnelUrl}/unlock`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{ display:"block", marginTop:"10px", textAlign:"center", textDecoration:"none" }}
+                    >
+                      👆 FINGERPRINT UNLOCK PAGE
+                    </a>
                   </>
                 ) : (
                   <div className="panel-loading">Setting up remote tunnel...<br /><small>Takes 10�30 seconds on first launch.</small></div>
