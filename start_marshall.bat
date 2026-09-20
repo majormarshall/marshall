@@ -1,39 +1,38 @@
-@echo off
-title MARSHALL AI System
-color 0A
-echo.
-echo  ¦¦¦+   ¦¦¦+ ¦¦¦¦¦+ ¦¦¦¦¦¦+ ¦¦¦¦¦¦¦+¦¦+  ¦¦+ ¦¦¦¦¦+ ¦¦+     ¦¦+
-echo  ¦¦¦¦+ ¦¦¦¦¦¦¦+--¦¦+¦¦+--¦¦+¦¦+----+¦¦¦  ¦¦¦¦¦+--¦¦+¦¦¦     ¦¦¦
-echo  ¦¦+¦¦¦¦+¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦++¦¦¦¦¦¦¦+¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦     ¦¦¦
-echo  ¦¦¦+¦¦++¦¦¦¦¦+--¦¦¦¦¦+--¦¦++----¦¦¦¦¦+--¦¦¦¦¦+--¦¦¦¦¦¦     ¦¦¦
-echo  ¦¦¦ +-+ ¦¦¦¦¦¦  ¦¦¦¦¦¦  ¦¦¦¦¦¦¦¦¦¦¦¦¦¦  ¦¦¦¦¦¦  ¦¦¦¦¦¦¦¦¦¦+¦¦¦¦¦¦¦+
-echo  +-+     +-++-+  +-++-+  +-++------++-+  +-++-+  +-++------++------+
-echo.
-echo  Initializing MARSHALL AI System...
-echo.
-
-cd /d "%~dp0"
-
-:: Start Python backend
-echo  [1/2] Starting MARSHALL Backend (Python)...
-start "MARSHALL Backend" cmd /k "python main.py"
-
-:: Wait 3 seconds for backend to start
-timeout /t 3 /nobreak >nul
-
-:: Start Next.js frontend
-echo  [2/2] Starting MARSHALL Orb UI (Next.js)...
-start "MARSHALL UI" cmd /k "cd /d ..\ultron-marshall && npm run dev"
-
-:: Wait and open browser
-timeout /t 5 /nobreak >nul
-echo.
-echo  MARSHALL is online. Opening browser...
-start http://localhost:3000
-
-echo.
-echo  Backend API: http://localhost:8000
-echo  Orb UI:      http://localhost:3000
-echo  API Docs:    http://localhost:8000/docs
-echo.
-pause
+@echo off
+title MARSHALL AI
+
+:: Re-launch as Administrator if not already elevated
+net session >nul 2>&1
+if %errorLevel% neq 0 (
+    echo [MARSHALL] Requesting Administrator privileges...
+    powershell -Command "Start-Process cmd -ArgumentList '/c %~f0' -Verb RunAs"
+    exit /b
+)
+
+color 0A
+echo.
+echo  ===================================
+echo   M.A.R.S.H.A.L.L  STARTING UP
+echo   Running as Administrator
+echo  ===================================
+echo.
+
+:: Kill anything already on port 8000
+echo [MARSHALL] Clearing port 8000...
+for /f "tokens=5" %%a in ('netstat -aon ^| findstr ":8000 "') do taskkill /PID %%a /F >nul 2>&1
+timeout /t 2 /nobreak >nul
+
+:: Start backend (serves UI + API + unlock)
+echo [MARSHALL] Starting AI backend on port 8000...
+start "MARSHALL Backend" cmd /k "cd /d %~dp0 && python main.py"
+timeout /t 5 /nobreak >nul
+
+:: Open the orb UI
+start "" "http://localhost:8000"
+
+echo.
+echo  MARSHALL ONLINE - http://localhost:8000
+echo  Running as Administrator - unlock feature active
+echo  Check Phone panel in orb for remote QR code
+echo.
+pause

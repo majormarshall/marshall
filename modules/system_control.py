@@ -127,3 +127,50 @@ def set_volume(level: int):
         # Fallback using nircmd if available
         subprocess.run(f"nircmd.exe setsysvolume {int(level * 655.35)}", shell=True)
         return {"status": "ok", "volume": level}
+
+
+APP_ICONS = {
+    "chrome": "🌐", "firefox": "🦊", "edge": "🔵", "opera": "🎭",
+    "spotify": "🎵", "discord": "💬", "slack": "💼", "teams": "👥",
+    "zoom": "📹", "skype": "📞", "visual studio": "💻", "code": "💻",
+    "notepad": "📝", "word": "📄", "excel": "📊", "powerpoint": "📑",
+    "outlook": "📧", "onenote": "📓", "steam": "🎮", "epic": "🎮",
+    "vlc": "🎬", "photoshop": "🖼️", "blender": "🎨", "paint": "🎨",
+    "gimp": "🖼️", "7-zip": "🗜️", "winrar": "🗜️", "calculator": "🧮",
+    "settings": "⚙️", "control panel": "⚙️", "powershell": "🖥️",
+    "cmd": "🖥️", "terminal": "🖥️", "python": "🐍", "node": "🟢",
+    "git": "🔀", "antigravity": "🤖", "task manager": "📊",
+    "remote desktop": "🖥️", "paint": "🎨", "wordpad": "📝",
+    "media player": "🎬", "default": "🚀",
+}
+
+
+def _get_icon(name: str) -> str:
+    n = name.lower()
+    for key, icon in APP_ICONS.items():
+        if key in n:
+            return icon
+    return APP_ICONS["default"]
+
+
+def get_installed_apps():
+    """Scan Start Menu shortcuts and return every installed app."""
+    import glob
+    start_menus = [
+        r"C:\ProgramData\Microsoft\Windows\Start Menu\Programs",
+        r"C:\Users\exboi marshall\AppData\Roaming\Microsoft\Windows\Start Menu\Programs",
+    ]
+    skip = ["uninstall", "help", "read me", "readme", "release notes", "license", "what's new"]
+    apps = {}
+    for sm in start_menus:
+        for lnk in glob.glob(sm + "/**/*.lnk", recursive=True):
+            name = os.path.splitext(os.path.basename(lnk))[0].strip()
+            if any(k in name.lower() for k in skip):
+                continue
+            if name and name not in apps:
+                apps[name] = {
+                    "name": name,
+                    "path": lnk,
+                    "icon": _get_icon(name),
+                }
+    return sorted(apps.values(), key=lambda x: x["name"].lower())

@@ -1,6 +1,7 @@
 """
 MARSHALL - AI Router Module
-Routes requests to Grok (xAI) for all intelligence tasks.
+Routes requests to Groq (fast inference) for all intelligence tasks.
+Models: groq/compound for chat, whisper-large-v3-turbo for voice.
 """
 import os
 from openai import OpenAI
@@ -12,7 +13,7 @@ GROK_API_KEY = os.getenv("GROK_API_KEY")
 
 client = OpenAI(
     api_key=GROK_API_KEY,
-    base_url="https://api.x.ai/v1",
+    base_url="https://api.groq.com/openai/v1",
 )
 
 MARSHALL_SYSTEM_PROMPT = """You are MARSHALL - an advanced personal AI assistant controlling a Windows PC system.
@@ -48,7 +49,7 @@ def chat(user_message: str, reset: bool = False) -> str:
 
     try:
         response = client.chat.completions.create(
-            model="grok-3",
+            model="groq/compound",
             messages=messages,
             max_tokens=2048,
             temperature=0.7,
@@ -57,10 +58,10 @@ def chat(user_message: str, reset: bool = False) -> str:
         conversation_history.append({"role": "assistant", "content": reply})
         return reply
     except Exception as e:
-        # Fallback to grok-2
+        # Fallback to qwen
         try:
             response = client.chat.completions.create(
-                model="grok-2-latest",
+                model="qwen/qwen3.8-27b",
                 messages=messages,
                 max_tokens=2048,
                 temperature=0.7,
