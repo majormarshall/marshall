@@ -7,7 +7,7 @@ import { HandTracker, type TrackerStatus } from "@/lib/handTracker";
 type CameraState = "off" | "starting" | "on" | "error";
 type Panel = "none" | "chat" | "files" | "apps" | "camera" | "qr" | "system";
 
-const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+const API = process.env.NEXT_PUBLIC_API_URL ?? "";
 
 const MODE_LABEL: Record<TrackerStatus["mode"], string> = {
   idle: "STANDBY",
