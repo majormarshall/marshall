@@ -12,7 +12,7 @@ const MODE_LABEL: Record<TrackerStatus["mode"], string> = {
   zoom: "ZOOM",
 };
 
-export default function JarvisOrb() {
+export default function MarshallOrb() {
   const containerRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const overlayRef = useRef<HTMLCanvasElement>(null);
@@ -113,7 +113,7 @@ export default function JarvisOrb() {
       <div className="overlay-grain" />
       <div className="overlay-scanlines" />
 
-      <div className="hud hud-title">U.L.T.R.O.N.</div>
+      <div className="hud hud-title">M.A.R.S.H.A.L.L.</div>
 
       <div className="hud hud-hint">
         <div>

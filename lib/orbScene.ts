@@ -416,8 +416,10 @@ export function createOrbScene(container: HTMLElement): OrbSceneApi {
     "mutex.lk", "IRQ 0x7", "DMA xfer", "REG EAX", "FAULT 0",
     "kernel.d", "pipe |>", "chmod +x", "fork()", "SIGTERM",
     "eth0: UP", "AES-256", "RSA 4096", "TLS 1.3", "HTTP/2",
-    "latency", "200 OK", "PATCH /", "fn main", "use std",
-    "impl Orb", "async {}", "spawn()", "arc::new", ".unwrap",
+    "MARSHALL", "M.A.R.S.H.A.L.L.", "marshall.ai", "marshall.exe",
+    "boot: OK", "ID: MRL", "auth:true", "user=mrsh", "mrl.init",
+    "fn main", "use std", "impl Orb", "async {}", "spawn()",
+    "arc::new", ".unwrap", "latency", "200 OK", "PATCH /",
   ];
 
   interface SpriteDrift {
